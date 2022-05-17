@@ -1,10 +1,5 @@
 use std::{ops::{Add, Sub, Mul, AddAssign, SubAssign, Div, Rem}, fmt::Debug};
 
-pub trait DefaultNumber {
-    fn zero() -> Self;
-    fn one() -> Self;
-}
-
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct FiniteFieldElement<T>
 where
@@ -25,13 +20,13 @@ where
 
 impl<T> FiniteFieldElement<T>
 where
-    T: Rem<Output = T> + Add<Output = T> + Sub<Output = T> + PartialEq + PartialOrd + Copy + DefaultNumber + Debug
+    T: Rem<Output = T> + Add<Output = T> + Sub<Output = T> + Div<Output = T> + PartialEq + PartialOrd + Copy + Debug
 {
     fn pow(self, e: T) -> Self {
-        let one = T::one();
+        let one = self.value / self.value;
         let mut r = Self::new(one, self.p);
         let mut i = e % (self.p - one);
-        let zero = T::zero();
+        let zero = self.value - self.value;
         while i > zero {
             r = r * self;
             i = i - one;
@@ -97,7 +92,7 @@ where
 
 impl<T> Mul for FiniteFieldElement<T>
 where
-    T: Add<Output = T> + Sub<Output = T> + PartialEq + PartialOrd + Copy + DefaultNumber
+    T: Add<Output = T> + Sub<Output = T> + Div<Output = T> + PartialEq + PartialOrd + Copy
 {
     type Output = Self;
 
@@ -105,8 +100,8 @@ where
         if self.p != rhs.p {
             panic!("Cannot mul different field value.");
         }
-        let one = T::one();
-        let zero = T::zero();
+        let one = self.value / self.value;
+        let zero = self.value - self.value;
         let mut i = rhs.value;
         let mut r = Self::new(zero, self.p);
         while i > zero {
@@ -119,12 +114,12 @@ where
 
 impl<T> Div for FiniteFieldElement<T>
 where
-    T: Add<Output = T> + Sub<Output = T> + Rem<Output = T> + PartialEq + PartialOrd + Copy + DefaultNumber + Debug
+    T: Add<Output = T> + Sub<Output = T> + Rem<Output = T> + Div<Output = T> + PartialEq + PartialOrd + Copy + Debug
 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        let one = T::one();
+        let one = self.value / self.value;
         self * rhs.pow(self.p - one - one)
     }
 }
